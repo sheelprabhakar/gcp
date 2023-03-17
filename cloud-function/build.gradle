@@ -1,0 +1,48 @@
+plugins {
+    id 'java'
+}
+
+group = 'com.c4c.gcp'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '11'
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+configurations {
+    invoker
+}
+dependencies {
+    compileOnly 'com.google.cloud.functions:functions-framework-api:1.0.4'
+
+    // To run function locally using Functions Framework's local invoker
+    invoker 'com.google.cloud.functions.invoker:java-function-invoker:1.2.0'
+
+    compileOnly 'org.projectlombok:lombok:1.18.26'
+    annotationProcessor 'org.projectlombok:lombok:1.18.26'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
+// Register a "runFunction" task to run the function locally
+tasks.register("runFunction", JavaExec) {
+    main = 'com.google.cloud.functions.invoker.runner.Invoker'
+    classpath(configurations.invoker)
+    inputs.files(configurations.runtimeClasspath, sourceSets.main.output)
+    args(
+            '--target', project.findProperty('run.functionTarget') ?: '',
+            '--port', project.findProperty('run.port') ?: 8080
+    )
+    doFirst {
+        args('--classpath', files(configurations.runtimeClasspath, sourceSets.main.output).asPath)
+    }
+}
