@@ -1,5 +1,6 @@
 plugins {
     id 'java'
+    id 'com.github.johnrengelman.shadow' version '8.1.0'
 }
 
 group = 'com.c4c.gcp'
@@ -20,6 +21,8 @@ configurations {
     invoker
 }
 dependencies {
+    shadow localGroovy()
+    shadow gradleApi()
     compileOnly 'com.google.cloud.functions:functions-framework-api:1.0.4'
 
     // To run function locally using Functions Framework's local invoker
@@ -46,3 +49,4 @@ tasks.register("runFunction", JavaExec) {
         args('--classpath', files(configurations.runtimeClasspath, sourceSets.main.output).asPath)
     }
 }
+
