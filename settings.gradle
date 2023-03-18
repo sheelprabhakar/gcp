@@ -1,2 +1,3 @@
 rootProject.name = 'gcp-java'
 include 'cloud-function'
+include 'cloud-function-manager'
