@@ -1,6 +1,7 @@
 plugins {
     id 'java'
-    id 'com.github.johnrengelman.shadow' version '8.1.0'
+    id 'org.springframework.boot' version '2.7.9'
+    id 'io.spring.dependency-management' version '1.0.15.RELEASE'
 }
 
 group = 'com.c4c.gcp'
@@ -17,37 +18,19 @@ repositories {
     mavenCentral()
 }
 
-configurations {
-    invoker
-}
 dependencies {
-    shadow localGroovy()
-    shadow gradleApi()
-    implementation 'com.google.cloud:google-cloud-functions:2.7.0'
-    compileOnly 'com.google.cloud.functions:functions-framework-api:1.0.4'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
 
-    // To run function locally using Functions Framework's local invoker
-    invoker 'com.google.cloud.functions.invoker:java-function-invoker:1.2.0'
+    implementation 'com.google.cloud:google-cloud-functions:2.7.0'
 
     compileOnly 'org.projectlombok:lombok:1.18.26'
     annotationProcessor 'org.projectlombok:lombok:1.18.26'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
 
 tasks.named('test') {
     useJUnitPlatform()
 }
 
-// Register a "runFunction" task to run the function locally
-tasks.register("runFunction", JavaExec) {
-    main = 'com.google.cloud.functions.invoker.runner.Invoker'
-    classpath(configurations.invoker)
-    inputs.files(configurations.runtimeClasspath, sourceSets.main.output)
-    args(
-            '--target', project.findProperty('run.functionTarget') ?: '',
-            '--port', project.findProperty('run.port') ?: 8080
-    )
-    doFirst {
-        args('--classpath', files(configurations.runtimeClasspath, sourceSets.main.output).asPath)
-    }
-}
 
