@@ -1,8 +1,9 @@
 package com.c4c.gcp.functionmgr.core.service.impl;
 
 import com.c4c.gcp.functionmgr.common.Utils;
-import com.c4c.gcp.functionmgr.core.service.api.FunctionDetails;
+import com.c4c.gcp.functionmgr.core.service.api.FunctionDetailsService;
 import com.google.cloud.functions.v2.Function;
+import com.google.cloud.functions.v2.FunctionName;
 import com.google.cloud.functions.v2.FunctionServiceClient;
 import com.google.cloud.functions.v2.LocationName;
 import org.springframework.stereotype.Service;
@@ -10,14 +11,29 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 import static com.c4c.gcp.functionmgr.common.Constants.*;
 
 @Service
-public class FunctionDetailsImpl implements FunctionDetails {
+public class FunctionDetailsServiceImpl implements FunctionDetailsService {
 
-    private List<String> listFunctions() throws IOException {
-        List<String> result = new ArrayList<>();
+    @Override
+    public List<FunctionName> listAllFunction() throws IOException {
+        List<FunctionName> functionNames = new ArrayList<>();
+        List<Function> functions = this.listFunctions();
+        for (Function fn : functions){
+            String parts[] = fn.getName().split("/");
+            if(parts.length == 6) {
+                functionNames.add(FunctionName.newBuilder().setFunction(parts[5]).setLocation(parts[3])
+                        .setProject(parts[1]).build());
+            }
+        }
+        return functionNames;
+    }
+    private List<Function> listFunctions() throws IOException {
+        List<Function> result = new ArrayList<>();
         try (FunctionServiceClient functionServiceClient = FunctionServiceClient.create()) {
             String location = System.getenv(LOCATION);
             if(Utils.isEmpty(location)){
@@ -32,9 +48,8 @@ public class FunctionDetailsImpl implements FunctionDetails {
             FunctionServiceClient.ListFunctionsPagedResponse response = functionServiceClient.listFunctions(locationName);
             for (FunctionServiceClient.ListFunctionsPage page : response.iteratePages()) {
                 for (Function function : page.iterateAll()) {
-                    result.add( function.getName());
+                    result.add( function);
                 }
-
             }
             return result;
         }
